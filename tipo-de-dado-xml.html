@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <title>PostgreSQL - XML</title>
+  <link rel="icon" href="img/postgre-banner.png">
+
+  <!-- Bootstrap core CSS -->
+  <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Custom fonts for this template -->
+  <link href="vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+  <link href='https://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800'
+    rel='stylesheet' type='text/css'>
+
+  <!-- Custom styles for this template -->
+  <link href="css/blog.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+  <!-- Navigation -->
+  <nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
+    <div class="container">
+      <a class="navbar-brand" href="https://www.postgresql.org/docs/10/static/index.html">PostgreSQL</a>
+      <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive"
+        aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+        Menu
+        <i class="fa fa-bars"></i>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarResponsive">
+        <ul class="navbar-nav ml-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="index.html">Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="tipo-de-dado-xml.html">Tipo de dado XML</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="funcoes-xml.html">Funções XML</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Page Header -->
+  <header id="xml-img" class="masthead" style="background-image: url('img/arquivo-xml.png');">
+    <div class="overlay"></div>
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-8 col-md-10 mx-auto">
+          <div class="site-heading">
+            <h1>Tipo de Dado XML</h1>
+            <span class="subheading">PostgreSQL</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <article>
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-8 col-md-10 mx-auto post">
+          <p>
+            No banco de dados PostgreSQL, o tipo de dado xml pode ser usado para armazenar dados xml em formas de fragmentos, ou documentos
+            completos. A vantagem desta abordagem é que há uma grande quantidade de dados em formatos xml, e esse fato não
+            está mudando rapidamente devido a um grande investimento em xml. Ocasionalmente, inserir dados xml em um banco
+            de dados relacional pode render uma vitória quando a integração com fontes de dados externas fornece dados em
+            xml.
+          </p>
+          <p>
+            PostgreSQL tem a capacidade de manipular dados xml com sql, permitindo um caminho para integrar dados xml em consultas sql.
+            A declaração deste tipo de campo é como a dos outros tipos. Desenvolveremos exemplos deste tipo de campo ao longo
+            do post, vendo na prática sua utilização e como podemos tirar proveito de seu uso.
+          </p>
+
+          <p>
+            <h3 class="section-heading">Criando Valores XML</h3>
+            <p>
+              Segundo o padrão SQL, para criar um valor do tipo xml a partir de uma string, devemos utilizar a função xmlparse.
+            </p>
+            <textarea class="form-control" wrap='off' rows="2" cols="10" readonly>XMLPARSE ( { DOCUMENT | CONTENT } value)                        
+              </textarea>
+          </p>
+
+          <p>
+            <p>
+              Exemplos:
+            </p>
+            <textarea class="form-control" wrap='off' rows="3" cols="20" readonly>XMLPARSE (DOCUMENT '<?xml version="1.0"?><book><title>Manual</title><chapter>...</chapter></book>')
+XMLPARSE (CONTENT 'abc<foo>bar</foo><bar>foo</bar>')</textarea>
+          </p>
+
+          <p>
+            <h3 class="section-heading">Sintaxe no PostgreSQL</h3>
+            <p>
+              No PostgreSQL, existem duas sintaxes específicas que também podem ser utilizadas:
+            </p>
+            <textarea class="form-control" wrap='off' rows="3" cols="20" readonly>xml '<foo>bar</foo>'                
+'<foo>bar</foo>'::xml</textarea>
+            <p>
+              O tipo de dados xml não valida valores de entrada contra um Document Type Declaration (DTD), mesmo quando o valor de entrada
+              especifica uma DTD. Para realizar a operação inversa e obter uma string de um valor xml, deve-se usar a função
+              xmlserialize.
+              <p>
+                <textarea class="form-control" wrap='off' rows="2" cols="20" readonly>XMLSERIALIZE ( { DOCUMENT | CONTENT } value AS type )</textarea>
+                <strong>
+                  <em>type</em>
+                </strong> pode ser um char, derivado do tipo char ou string. De acordo com o padrão SQL esta é a única maneira de converter
+                entre tipos xml e tipos de char, mas o PostgreSQL também permite que você simplesmente elimine o valor.
+              </p>
+              <p>
+                Quando uma string é convertida para tipo xml sem passar pelas funções XMLPARSE ou XMLSERIALIZE, a escolha do parâmetro DOCUMENT
+                ou CONTENT é determinada pelo parâmetro de configuração de sessão "opção xml", que pode ser configurado usando
+                o comando:
+                <p>
+                  <textarea class="form-control" wrap='off' rows="5" cols="20" readonly>SET XML OPTION { DOCUMENT | CONTENT };
+
+Sintaxe PostgreSQL:
+SET xmloption TO { DOCUMENT | CONTENT };
+                      </textarea>
+                </p>
+                <p>
+                  Por padrão, a escolha é o parâmetro CONTENT, assim todas as formas de dados xml são permitidas. Portanto, não se pode passar
+                  diretamente strings para obter-se o tipo de dado xml se as mesmas conterem uma declaração DTD, pois a definição
+                  de fragmento de conteúdo xml não as aceita. Se você precisar fazer isso, use XMLPARSE ou altere a opção
+                  xml com os comandos supracitados.
+                </p>
+              </p>
+            </p>
+          </p>
+
+          <div class="clearfix">
+            <a class="btn btn-primary float-right" title="Tipo de Dado XML" href="https://www.postgresql.org/docs/9.3/static/datatype-xml.html">Documentação Oficial &rarr;</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <a href="#" id="back-to-top" title="Back to top">
+      <i class="fa fa-chevron-up"></i>
+    </a>
+  </article>
+
+  <hr>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-8 col-md-10 mx-auto">
+          <ul class="list-inline text-center">
+            <li class="list-inline-item">
+              <a href="#">
+                <span class="fa-stack fa-lg">
+                  <i class="fa fa-circle fa-stack-2x"></i>
+                  <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
+                </span>
+              </a>
+            </li>
+            <li class="list-inline-item">
+              <a href="#">
+                <span class="fa-stack fa-lg">
+                  <i class="fa fa-circle fa-stack-2x"></i>
+                  <i class="fa fa-facebook fa-stack-1x fa-inverse"></i>
+                </span>
+              </a>
+            </li>
+            <li class="list-inline-item">
+              <a href="#">
+                <span class="fa-stack fa-lg">
+                  <i class="fa fa-circle fa-stack-2x"></i>
+                  <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                </span>
+              </a>
+            </li>
+          </ul>
+          <p class="copyright text-muted">Copyright &copy; Manoel Silva 2017</p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Bootstrap core JavaScript -->
+  <script src="vendor/jquery/jquery.min.js"></script>
+  <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Custom scripts for this template -->
+  <script src="js/blog.js"></script>
+
+</body>
+
+</html>
