@@ -102,9 +102,162 @@ xmlcomment
             </p>
             <p>
               <h3 class="section-subheading">xmlconcat</h3>
+              <textarea class="form-control" wrap='off' rows="2" cols="10" readonly>xmlconcat(xml[, ...])</textarea>
+              <p>
+                A função xmlconcat concatena uma lista de valores xml, individuais, para criar um único valor contendo um fragmento de conteúdo
+                xml.
+              </p>
+              <p>
+                Exemplo:
+                <textarea class="form-control" wrap='off' rows="5" cols="10" readonly>SELECT xmlconcat('<abc/>', '<bar>foo</bar>');
+xmlconcat
+----------------------
+<abc/><bar>foo</bar>
+                  </textarea>
+              </p>
+              <p>
+                <p>
+                  As declarações xml, se presentes, são combinadas da seguinte forma:
+                </p>
+                <p>
+                  Se todos os valores, passados como parâmetros, tiverem a mesma declaração de versão xml, essa versão será usada no resultado,
+                  caso contrário nenhuma versão será usada;
+                </p>
+                <p>
+                  Se todos os argumentos tiverem o valor de declaração standalone "yes", por exemplo:
+                  <textarea class="form-control" wrap='off' rows="1" cols="1" readonly><?xml version="1.0" encoding="UTF-8" standalone="yes"?></textarea> esse valor será usado no resultado;
+                </p>
+                <p>
+                  Se todos os valores passados como argumento tiverem um valor de declaração standalone e pelo menos um é "no", então isso
+                  é usado no resultado, caso contrário, o resultado não terá nenhuma declaração standalone;
+                </p>
+                <p>
+                  Se houver uma declaração standalone, mas nenhuma declaração de versão, uma declaração de versão com a versão 1.0 será usada
+                  por default, pois o xml requer uma declaração xml para conter uma declaração de versão;
+                </p>
+                <p>
+                  As declarações de encode são ignoradas e removidas em todos os casos.
+                </p>
+                <p>
+                  Exemplo:
+                  <textarea class="form-control" wrap='off' rows="5" cols="10" readonly>SELECT xmlconcat('<?xml version="1.1"?><foo/>', '<?xml version="1.1" standalone="no"?><bar/>');
+xmlconcat
+-----------------------------------
+<?xml version="1.1"?><foo/><bar/>
+                      </textarea>
+                </p>
+              </p>
             </p>
           </p>
+          <p>
+            <h3 class="section-heading">Mapeando Tabelas para XML</h3>
+            <p>
+              As seguintes funções mapeiam o conteúdo de tabelas relacionais para valores XML. Elas podem ser pensadas como funcionalidades
+              de exportação XML.
+            </p>
+            <p>
+              <textarea class="form-control" wrap='off' rows="5" cols="10" readonly>table_to_xml(tbl regclass, nulls boolean, tableforest boolean, targetns text)
+query_to_xml(query text, nulls boolean, tableforest boolean, targetns text)
+cursor_to_xml(cursor refcursor, count int, nulls boolean,
+              tableforest boolean, targetns text)
+                </textarea> O tipo de retorno de cada função é xml.
+            </p>
+            <p>
+              <strong>table_to_xml</strong> mapeia o conteúdo da tabela cujo nome é passado como parâmetro para tbl. O tipo regclass
+              aceita strings identificando tabelas usando a notação usual, incluindo qualificações de esquema opcionais e
+              aspas duplas.
+              <strong>query_to_xml</strong> executa a consulta cujo texto é passado como parâmetro e mapeia o conjunto de resultados.
+              <strong>cursor_to_xml</strong> obtém o número de linhas indicado no cursor especificado como parâmetro. Esta variante
+              é recomendada se tabelas grandes tiverem que ser mapeadas, pois o valor do resultado é acumulado na memória
+              por cada função.
+            </p>
+            <p>
+              Se tableforest é igual a "false", então o documento xml resultante parecerá assim:
+              <textarea class="form-control" wrap='off' rows="12" cols="10" readonly>
+<tablename>
+  <row>
+    <columnname1>data</columnname1>
+    <columnname2>data</columnname2>
+  </row>
 
+  <row>
+    ...
+  </row>
+  ...
+</tablename>
+</textarea>
+            </p>
+            <p>
+              Se tableforest é igual a "true", então o documento xml resultante parecerá assim:
+              <textarea class="form-control" wrap='off' rows="9" cols="10" readonly>
+<tablename>
+  <columnname1>data</columnname1>
+  <columnname2>data</columnname2>
+</tablename>
+
+<tablename>
+  ...
+</tablename>
+...</textarea>
+            </p>
+            <p>
+              As seguintes funções produzem mapeamentos de dados xml e o schema xml correspondente em um documento,ou forest, unidos. Eles
+              podem ser úteis quando deseja-se resultados auto-suficientes e auto-descritivos.
+              <p>
+                <textarea class="form-control" wrap='off' rows="16" cols="10" readonly>
+table_to_xmlschema(tbl regclass, nulls boolean, tableforest boolean, targetns text)
+query_to_xmlschema(query text, nulls boolean, tableforest boolean, targetns text)
+cursor_to_xmlschema(cursor refcursor, nulls boolean, tableforest boolean, targetns text)
+
+table_to_xml_and_xmlschema(tbl regclass, nulls boolean, tableforest boolean, targetns text)
+query_to_xml_and_xmlschema(query text, nulls boolean, tableforest boolean, targetns text)
+
+schema_to_xml(schema name, nulls boolean, tableforest boolean, targetns text)
+schema_to_xmlschema(schema name, nulls boolean, tableforest boolean, targetns text)
+schema_to_xml_and_xmlschema(schema name, nulls boolean, 
+                              tableforest boolean, targetns text)
+
+database_to_xml(nulls boolean, tableforest boolean, targetns text)
+database_to_xmlschema(nulls boolean, tableforest boolean, targetns text)
+database_to_xml_and_xmlschema(nulls boolean, tableforest boolean, targetns text)
+                 </textarea>
+              </p>
+              <p>
+                É possível notar que há a produção de muitos dados, com a utilização destas funções, que precisam ser instanciados em memória.
+                Ao solicitar mapeamentos de conteúdo de grandes schemas ou bancos de dados, pode valer a pena considerar
+                o mapeamento das tabelas separadamente, possivelmente através de um cursor. O resultado de um mapeamento
+                de conteúdo de schema parece assim:
+                <textarea class="form-control" wrap='off' rows="9" cols="10" readonly>
+<schemaname>
+
+  table1-mapping
+
+  table2-mapping
+
+  ...
+</schemaname>
+                </textarea> onde o formato de um mapeamento de tabela depende do parâmetro tableforest como explicado acima.
+                <p>
+                  O resultado de um mapeamento de conteúdo do banco de dados parece assim:
+                  <textarea class="form-control" wrap='off' rows="14" cols="10" readonly>
+<dbname>
+
+  <schema1name>
+    ...
+  </schema1name>
+
+  <schema2name>
+    ...
+  </schema2name>
+
+    ...
+
+</dbname>
+                  </textarea> onde o mapeamento do schema é como acima.
+                </p>
+              </p>
+            </p>
+          </p>
           <div class="clearfix">
             <a class="btn btn-primary float-right" title="Tipo de Dado XML" href="https://www.postgresql.org/docs/9.3/static/functions-xml.html">Documentação Oficial &rarr;</a>
           </div>
@@ -125,7 +278,7 @@ xmlcomment
         <div class="col-lg-8 col-md-10 mx-auto">
           <ul class="list-inline text-center">
             <li class="list-inline-item">
-              <a href="#">
+              <a href="https://twitter.com/manhelsurf">
                 <span class="fa-stack fa-lg">
                   <i class="fa fa-circle fa-stack-2x"></i>
                   <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
@@ -133,7 +286,7 @@ xmlcomment
               </a>
             </li>
             <li class="list-inline-item">
-              <a href="#">
+              <a href="https://www.facebook.com/manoel.junior.180">
                 <span class="fa-stack fa-lg">
                   <i class="fa fa-circle fa-stack-2x"></i>
                   <i class="fa fa-facebook fa-stack-1x fa-inverse"></i>
@@ -141,7 +294,7 @@ xmlcomment
               </a>
             </li>
             <li class="list-inline-item">
-              <a href="#">
+              <a href="https://github.com/manoelsilva">
                 <span class="fa-stack fa-lg">
                   <i class="fa fa-circle fa-stack-2x"></i>
                   <i class="fa fa-github fa-stack-1x fa-inverse"></i>
