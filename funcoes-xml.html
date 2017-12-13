@@ -74,7 +74,88 @@
         <div class="col-lg-8 col-md-10 mx-auto post">
           <p>
             PostgreSQL fornece um conjunto de expressões e funções capazes de manipular o tipo de dados e valores xml. Neste post, iremos
-            percorrer alguns exemplos das principais funções, como e quanto utiliza-las.
+            percorrer alguns exemplos das principais funções, como e quando utiliza-las.
+          </p>
+          <p>
+            <h3 class="section-heading">Funções básicas de CRUD</h3>
+            <p>
+              O suporte ao tipo de dados xml possui as operações de
+              <strong>c</strong>reate,
+              <strong>r</strong>ead,
+              <strong>u</strong>pdate e
+              <strong>d</strong>elete. A seguir será exemplificado cada uma destas funções direcionadas com exemplos da manipulação
+              de xml.
+            </p>
+            <p>
+              <h3 class="section-subheading">CREATE</h3>
+              <textarea class="form-control" wrap='off' rows="6" cols="6" readonly>
+CREATE TABLE test (
+  ...,
+  data xml,
+  ...
+);
+              </textarea>
+            </p>
+            <p>
+              <h3 class="section-subheading">READ</h3>
+              <textarea class="form-control" wrap='off' rows="42" cols="10" readonly>
+*CRIANDO TABELA hoteldata*
+
+CREATE TABLE hoteldata AS SELECT xml
+$$<hotels>
+  <hotel id="mancha">
+  <name>La Mancha</name>
+  <rooms>
+    <room id="201"><capacity>3</capacity><comment>Great view of the Channel</comment></room>
+    <room id="202"><capacity>5</capacity></room>
+  </rooms>
+  <personnel>
+    <person id="1025">
+    <name>Ferdinando Quijana</name><salary currency="PTA">45000</salary>
+    </person>
+  </personnel>
+  </hotel>
+  <hotel id="valpo">
+  <name>Valparaíso</name>
+  <rooms>
+    <room id="201"><capacity>2</capacity><comment>Very noisy</comment></room>
+    <room id="202"><capacity>2</capacity></room>
+  </rooms>
+  <personnel>
+    <person id="1026"><name>Katharina Wuntz</name><salary currency="EUR">50000</salary></person>
+    <person id="1027"><name>Diego Velázquez</name><salary currency="CLP">1200000</salary></person>
+  </personnel>
+  </hotel>
+</hotels>$$ AS hotels;
+
+*SELECT USANDO XMLTABLE*
+
+SELECT xmltable.*
+FROM hoteldata,
+     XMLTABLE ('/hotels/hotel/rooms/room' PASSING hotels
+               COLUMNS
+                  id FOR ORDINALITY,
+                  hotel_name text PATH '../../name' NOT NULL,
+                  room_id int PATH '@id' NOT NULL,
+                  capacity int,
+                  comment text PATH 'comment' DEFAULT 'A regular room'
+              );
+              </textarea>
+            </p>
+            <p>
+              <h3 class="section-subheading">UPDATE</h3>
+              <textarea class="form-control" wrap='off' rows="4" cols="10" readonly>
+INSERT INTO test(id, xml) VALUES (1, XMLPARSE('<foo>Hello World!</foo>'));
+
+UPDATE test set xml foo=xml(REPLACE(OLDXML::text,'</foo>', NEW VALUE TO UPDATE ||'</foo>')) where foo='xxxx'
+              </textarea>
+            </p>
+            <p>
+              <h3 class="section-subheading">DELETE</h3>
+              <textarea class="form-control" wrap='off' rows="2" cols="10" readonly>
+DELETE from test where foo = 'xxxx'
+                </textarea>
+            </p>
           </p>
           <p>
             <h3 class="section-heading">Produzindo conteúdo XML</h3>
